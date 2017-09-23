@@ -24,7 +24,7 @@ function get(f, q, attempt) {
 }
 
 function getMembershipId(displayName) {
-    return get('http://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/-1/Crimson_Wrath')
+    return get(`http://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/-1/${displayName}`)
     .then(result => {
         return Promise.resolve(result[0].membershipId)
     })
@@ -52,14 +52,17 @@ function getActivities(membershipId, characterId, mode, activities=[], page=0) {
     })
 }
 
-function getPostGameCarnage(activityId, displayName) {
+function getPostGameCarnage(activityId, membershipId) {
     let obj = {}
     obj['medals'] = {}
 
     return get(`http://www.bungie.net/Platform//Destiny2/Stats/PostGameCarnageReport/${activityId}/`)
     .then(result => {
         let stats = result.entries.find(entry => {
-            return (entry.player.destinyUserInfo.displayName == displayName)
+            // console.log(entry.player.destinyUserInfo.displayName + ' vs ' + displayName)
+            // return (entry.player.destinyUserInfo.displayName.trim() == displayName.trim())
+            return (entry.player.destinyUserInfo.membershipId == membershipId)
+
         })
 
         // TODO add character info back in
@@ -117,11 +120,11 @@ let displayName = process.argv[2]
 getMembershipId(displayName)
 .then(result => {
     membershipId = result
-    // console.log(membershipId)
+    console.log(membershipId)
     return getCharacterIds(membershipId)
 })
 .then(characterIds => {
-    // console.log(characterIds)
+    console.log(characterIds)
     // TODO filter on character
     let promises = []
     characterIds.forEach(character => {
@@ -135,7 +138,7 @@ getMembershipId(displayName)
 .then(activityIds => {
     let promises = []
     activityIds.forEach(activityId => {
-        promises.push(getPostGameCarnage(activityId, displayName))
+        promises.push(getPostGameCarnage(activityId, membershipId))
     })
     return Promise.all(promises)
 })
