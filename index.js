@@ -53,21 +53,51 @@ function getActivities(membershipId, characterId, mode, activities=[], page=0) {
 }
 
 function getPostGameCarnage(activityId, displayName) {
+    let obj = {}
+    obj['medals'] = {}
+
     return get(`http://www.bungie.net/Platform//Destiny2/Stats/PostGameCarnageReport/${activityId}/`)
     .then(result => {
-        let me = result.entries.filter(entry => {
-            // console.log(entry.player.destinyUserInfo.displayName + ' vs ' + displayName)
-            // console.log('Equal? ' + (entry.player.destinyUserInfo.displayName == displayName))
+        let stats = result.entries.find(entry => {
             return (entry.player.destinyUserInfo.displayName == displayName)
         })
-        // console.log(me)
-        return Promise.resolve(me)
-        // return Promise.resolve(result.entries.filter(entry => {
-        //     // console.log(entry.player.destinyUserInfo.displayName + ' vs ' + displayName)
-        //     // console.log('Equal? ' + (entry.player.destinyUserInfo.displayName == displayName))
-        //     return (entry.player.destinyUserInfo.displayName == displayName)
-        // }))
+
+        // TODO add character info back in
+        Object.keys(stats.values).forEach(key => {
+            // console.log('Found ' + key)
+            obj[key] = stats.values[key].basic.value
+        })
+
+        Object.keys(stats.extended.values).forEach(key => {
+            obj['medals'][key] = stats.extended.values[key].basic.value
+        })
+
+        return Promise.resolve(obj)
     })
+}
+
+function getAggregateCarnage(carnage) {
+
+    let data = carnage.reduce((a, b) => {
+        let obj = {}
+        obj['medals'] = a.medals
+        Object.keys(a).forEach(key => {
+            if (key != 'medals') {
+                obj[key] = (a[key] + b[key])
+            }
+        })
+
+        Object.keys(b.medals).forEach(key => {
+            if (a.medals[key]) {
+                obj.medals[key] = a.medals[key] + b.medals[key]
+            } else {
+                obj.medals[key] = b.medals[key]
+            }
+        })
+        return obj
+    })
+    data['games'] = carnage.length
+    console.log(data)
 }
 
 let membershipId = ''
@@ -98,5 +128,7 @@ getMembershipId('Crimson_Wrath')
     return Promise.all(promises)
 })
 .then(carnage => {
-     console.log(carnage)
+    //console.log(carnage)
+    getAggregateCarnage(carnage)
+    //  console.log(carnage)
 })
