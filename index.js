@@ -77,7 +77,6 @@ function getPostGameCarnage(activityId, displayName) {
 }
 
 function getAggregateCarnage(carnage) {
-
     let data = carnage.reduce((a, b) => {
         let obj = {}
         obj['medals'] = a.medals
@@ -97,7 +96,22 @@ function getAggregateCarnage(carnage) {
         return obj
     })
     data['games'] = carnage.length
-    console.log(data)
+
+    // console.log(data)
+
+    return Promise.resolve({
+        games: carnage.length,
+        wins: carnage.length - data.standing,
+        kills: data.kills,
+        assists: data.assists,
+        deaths: data.deaths,
+        kd: data.kills / data.deaths,
+        kad: (data.kills + data.assists) / data.deaths,
+        kda: (data.kills + (data.assists)/2) / data.deaths,
+        avgScore: data.score / carnage.length,
+        medals: data.medals
+
+    })
 }
 
 let membershipId = ''
@@ -129,6 +143,9 @@ getMembershipId('Crimson_Wrath')
 })
 .then(carnage => {
     //console.log(carnage)
-    getAggregateCarnage(carnage)
+    return getAggregateCarnage(carnage)
     //  console.log(carnage)
+})
+.then(result => {
+    console.log(result)
 })
