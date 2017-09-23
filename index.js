@@ -55,6 +55,7 @@ function getActivities(membershipId, characterId, mode, activities=[], page=0) {
 function getPostGameCarnage(activityId, membershipId) {
     let obj = {}
     obj['medals'] = {}
+    obj['other'] = {}
 
     return get(`http://www.bungie.net/Platform//Destiny2/Stats/PostGameCarnageReport/${activityId}/`)
     .then(result => {
@@ -71,8 +72,12 @@ function getPostGameCarnage(activityId, membershipId) {
             obj[key] = stats.values[key].basic.value
         })
 
-        Object.keys(stats.extended.values).forEach(key => {
-            obj['medals'][key] = stats.extended.values[key].basic.value
+        Object.keys(stats.extended.values).sort().forEach(key => {
+            if (key.includes('medal')) {
+                obj['medals'][key] = stats.extended.values[key].basic.value
+            } else {
+                obj['other'][key] = stats.extended.values[key].basic.value
+            }
         })
 
         return Promise.resolve(obj)
@@ -99,6 +104,10 @@ function getAggregateCarnage(carnage) {
         return obj
     })
     // console.log(data)
+    let sortedMedals = {}
+    Object.keys(data.medals).sort().forEach(key => {
+        sortedMedals[key] = data.medals[key]
+    })
 
     return Promise.resolve({
         games: carnage.length,
@@ -110,7 +119,7 @@ function getAggregateCarnage(carnage) {
         kad: (data.kills + data.assists) / data.deaths,
         kda: (data.kills + (data.assists)/2) / data.deaths,
         avgScore: data.score / carnage.length,
-        medals: data.medals
+        medals: sortedMedals
 
     })
 }
@@ -120,11 +129,11 @@ let displayName = process.argv[2]
 getMembershipId(displayName)
 .then(result => {
     membershipId = result
-    console.log(membershipId)
+    // console.log(membershipId)
     return getCharacterIds(membershipId)
 })
 .then(characterIds => {
-    console.log(characterIds)
+    // console.log(characterIds)
     // TODO filter on character
     let promises = []
     characterIds.forEach(character => {
