@@ -86,7 +86,7 @@ function getAggregateCarnage(carnage) {
             }
         })
 
-        Object.keys(b.medals).forEach(key => {
+        Object.keys(b.medals).sort().forEach(key => {
             if (a.medals[key]) {
                 obj.medals[key] = a.medals[key] + b.medals[key]
             } else {
@@ -95,8 +95,6 @@ function getAggregateCarnage(carnage) {
         })
         return obj
     })
-    data['games'] = carnage.length
-
     // console.log(data)
 
     return Promise.resolve({
@@ -115,8 +113,8 @@ function getAggregateCarnage(carnage) {
 }
 
 let membershipId = ''
-let displayName = 'Crimson_Wrath'
-getMembershipId('Crimson_Wrath')
+let displayName = process.argv[2]
+getMembershipId(displayName)
 .then(result => {
     membershipId = result
     // console.log(membershipId)
